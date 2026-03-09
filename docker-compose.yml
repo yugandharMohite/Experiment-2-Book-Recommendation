@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend
+  nutrition-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nutrition-recommender-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=info
+      - ENVIRONMENT=development
+    volumes:
+      - ./models:/app/models
+      - ./Data:/app/Data
+      - ./reports:/app/reports
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - nutrition-db
+    networks:
+      - nutrition-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL Database (optional, for user data persistence)
+  nutrition-db:
+    image: postgres:15-alpine
+    container_name: nutrition-db
+    environment:
+      - POSTGRES_USER=nutrition_user
+      - POSTGRES_PASSWORD=secure_password_change_this
+      - POSTGRES_DB=nutrition_db
+    volumes:
+      - nutrition-db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - nutrition-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nutrition_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Streamlit Dashboard (optional)
+  nutrition-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: nutrition-dashboard
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - API_URL=http://nutrition-api:8000
+    volumes:
+      - ./app:/app
+      - ./reports:/app/reports
+    depends_on:
+      - nutrition-api
+    networks:
+      - nutrition-network
+    command: streamlit run app/dashboard.py --server.port=8501 --server.address=0.0.0.0
+
+  # MLflow Server (optional, for experiment tracking)
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: nutrition-mlflow
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+    environment:
+      - BACKEND_STORE_URI=postgresql://nutrition_user:secure_password_change_this@nutrition-db:5432/mlflow
+    command: mlflow server --backend-store-uri postgresql://nutrition_user:secure_password_change_this@nutrition-db:5432/mlflow --default-artifact-root /mlflow/artifacts --host 0.0.0.0
+    depends_on:
+      - nutrition-db
+    networks:
+      - nutrition-network
+
+  # Redis Cache (optional, for caching predictions)
+  redis:
+    image: redis:7-alpine
+    container_name: nutrition-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - nutrition-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  nutrition-db-data:
+  mlflow-data:
+  redis-data:
+
+networks:
+  nutrition-network:
+    driver: bridge
+
+# Usage:
+# docker-compose up -d              # Start all services
+# docker-compose down               # Stop all services
+# docker-compose logs -f nutrition-api  # View API logs
+# docker-compose exec nutrition-api python test_model_validation.py  # Run tests

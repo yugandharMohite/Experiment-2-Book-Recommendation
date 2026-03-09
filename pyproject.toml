@@ -1,0 +1,145 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nutrition-recommender"
+version = "1.0.0"
+description = "Hybrid ML system for personalized nutrition recommendations targeting obesity management"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Nutrition Recommender Contributors", email = "your.email@example.com"}
+]
+keywords = ["nutrition", "recommendation", "machine-learning", "obesity", "healthcare"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Healthcare",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "fastapi==0.111.0",
+    "uvicorn[standard]==0.29.0",
+    "pydantic==2.7.1",
+    "scikit-learn==1.4.2",
+    "numpy==1.26.4",
+    "pandas==2.2.2",
+    "ucimlrepo==0.0.6",
+    "python-multipart==0.0.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=4.0",
+    "pytest-asyncio>=0.20",
+    "black>=24.0",
+    "flake8>=7.0",
+    "isort>=5.13",
+    "mypy>=1.7",
+    "sphinx>=7.0",
+    "sphinx-rtd-theme>=2.0",
+]
+gpu = [
+    "torch>=2.0",
+    "tensorflow>=2.13",
+]
+ml = [
+    "mlflow>=2.13.0",
+    "xgboost>=2.0",
+    "lightgbm>=4.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/nutrition-recommender"
+Documentation = "https://github.com/yourusername/nutrition-recommender#readme"
+Repository = "https://github.com/yourusername/nutrition-recommender.git"
+"Bug Tracker" = "https://github.com/yourusername/nutrition-recommender/issues"
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | migrations
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+skip_glob = ["*/migrations/*"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "-v --strict-markers --tb=short"
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Slow running tests",
+]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/migrations/*",
+    "*/__main__.py",
+    "*/site-packages/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "^\\s*@abstractmethod",
+]
+precision = 2
+
+[tool.pylint.messages_control]
+disable = [
+    "missing-docstring",
+    "too-few-public-methods",
+    "too-many-arguments",
+]
+
+[tool.pylint.format]
+max-line-length = 100
+indent-string = "    "

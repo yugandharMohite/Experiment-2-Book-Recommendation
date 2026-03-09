@@ -50,15 +50,15 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t book-rec-system:${{ github.sha }} .
-          docker tag book-rec-system:${{ github.sha }} book-rec-system:latest
+          docker build -t nutrition-rec-system:${{ github.sha }} .
+          docker tag nutrition-rec-system:${{ github.sha }} nutrition-rec-system:latest
           echo "✅ Docker image built successfully"
 
       - name: Smoke test container
         run: |
           docker run -d --name test-container \
             -p 8000:8000 \
-            book-rec-system:latest
+            nutrition-rec-system:latest
           sleep 15
           curl --fail http://localhost:8000/ || exit 1
           echo "✅ API health check passed"
@@ -90,5 +90,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/book-rec-system:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/book-rec-system:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nutrition-rec-system:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/nutrition-rec-system:${{ github.sha }}

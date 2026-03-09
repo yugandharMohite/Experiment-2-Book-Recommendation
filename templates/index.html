@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🥗 NutriAI — Personalised Nutrition Recommender</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green:  #10b981; --green-d: #065f46; --green-l: #ecfdf5;
+      --slate:  #0f172a; --slate-l: #f8fafc;
+      --accent: #3b82f6; --danger: #ef4444;
+      --glass:  rgba(255, 255, 255, 0.7);
+      --shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+      --font: 'Outfit', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: var(--font); 
+      background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%); 
+      color: var(--slate); 
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #14532d 0%, #166534 50%, #15803d 100%);
+      color: white; padding: 28px 24px; text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    header h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; }
+    header p  { margin-top: 8px; opacity: 0.85; font-size: 1.05rem; }
+    .badge { display: inline-block; background: rgba(255,255,255,0.2);
+             border-radius: 20px; padding: 4px 14px; font-size: 0.8rem;
+             margin-top: 10px; backdrop-filter: blur(4px); }
+
+    /* ── LAYOUT ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+    @media(max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      padding: 30px;
+      box-shadow: var(--shadow);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+    }
+    .card-title {
+      font-size: 1.1rem; font-weight: 800; color: var(--green-d);
+      margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+      padding-bottom: 15px; border-bottom: 2px solid rgba(16, 185, 129, 0.1);
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    /* ── FORM ── */
+    .section-header {
+      font-size: 1.15rem; font-weight: 700; color: var(--green-d);
+      margin: 28px 0 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.82rem; font-weight: 600;
+            color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+    input, select {
+      width: 100%; padding: 11px 14px; border: 1.5px solid #d1fae5;
+      border-radius: 10px; font-size: 0.95rem; background: #f9fffe;
+      transition: all 0.2s; color: var(--text); appearance: none;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
+    .hint { font-size: 0.76rem; color: var(--muted); margin-top: 4px; }
+    .range-row { display: flex; align-items: center; gap: 12px; }
+    .range-row input[type=range] { flex: 1; accent-color: var(--green); }
+    .range-val { min-width: 42px; font-weight: 700; color: var(--green-d); text-align: right; font-size: 1rem; }
+
+    /* Checkbox group */
+    .check-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .check-item { display: flex; align-items: center; gap: 7px;
+                  background: #f0fdf4; border: 1.5px solid #d1fae5;
+                  border-radius: 8px; padding: 8px 10px; cursor: pointer;
+                  transition: all 0.2s; font-size: 0.85rem; }
+    .check-item:hover { border-color: var(--green); background: #dcfce7; }
+    .check-item input { width: auto; }
+
+    /* Submit button */
+    .btn {
+      width: 100%; padding: 18px; border: none; border-radius: 15px; cursor: pointer;
+      font-size: 1.1rem; font-weight: 800; letter-spacing: 0.5px;
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-d) 100%);
+      color: white; margin-top: 10px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 25px -5px rgba(16, 185, 129, 0.4);
+      text-transform: uppercase;
+    }
+    .btn:hover { 
+      transform: translateY(-3px) scale(1.02); 
+      box-shadow: 0 15px 35px -10px rgba(16, 185, 129, 0.5); 
+    }
+    .btn:active { transform: translateY(0) scale(1); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* ── LOADER ── */
+    .loader { display: none; text-align: center; padding: 40px; }
+    .spinner { width: 48px; height: 48px; border: 5px solid #d1fae5;
+               border-top-color: var(--green); border-radius: 50%;
+               animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── RESULTS ── */
+    #results { display: none; }
+
+    /* BMI meter */
+    .bmi-meter { position: relative; height: 28px; border-radius: 14px; overflow: hidden;
+                 background: linear-gradient(to right, #74b9ff,#55efc4,#fdcb6e,#e17055,#d63031,#7f0000);
+                 margin: 12px 0; }
+    .bmi-needle { position: absolute; top: -4px; width: 4px; height: 36px;
+                  background: #1a2e1a; border-radius: 2px; transform: translateX(-50%);
+                  transition: left 0.8s cubic-bezier(.34,1.56,.64,1); }
+    .bmi-labels { display: flex; justify-content: space-between;
+                  font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
+
+    /* Stat boxes */
+    .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
+    .stat-box { background: var(--green-l); border-radius: 12px; padding: 14px; text-align: center; border: 1.5px solid #bbf7d0; }
+    .stat-num { font-size: 1.6rem; font-weight: 800; color: var(--green-d); }
+    .stat-label { font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-top: 2px; }
+
+    /* Alert boxes */
+    .alert-box { border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; font-size: 0.9rem; font-weight: 500; }
+    .alert-warn { background: #fef3c7; border-left: 4px solid #f59e0b; color: #92400e; }
+    .alert-info { background: #e0f2fe; border-left: 4px solid #38bdf8; color: #0c4a6e; }
+    .alert-ok   { background: #dcfce7; border-left: 4px solid var(--green); color: #14532d; }
+    .alert-urgent { background: #fee2e2; border-left: 4px solid var(--red); color: #7f1d1d; }
+
+    /* Tags */
+    .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .tag { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+    .tag-green  { background: #dcfce7; color: #14532d; }
+    .tag-red    { background: #fee2e2; color: #7f1d1d; }
+    .tag-blue   { background: #dbeafe; color: #1e3a8a; }
+    .tag-purple { background: #ede9fe; color: #4c1d95; }
+    .tag-orange { background: #ffedd5; color: #7c2d12; }
+
+    /* Meal plan */
+    .meal-item { display: flex; align-items: flex-start; gap: 12px;
+                 padding: 12px; background: #f0fdf4; border-radius: 10px;
+                 margin-bottom: 8px; border: 1px solid #d1fae5; }
+    .meal-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .meal-text { font-size: 0.92rem; font-weight: 500; }
+
+    /* Macro chart */
+    .macro-bar { height: 28px; border-radius: 14px; overflow: hidden;
+                 display: flex; margin: 10px 0; }
+    .macro-seg { display: flex; align-items: center; justify-content: center;
+                 font-size: 0.78rem; font-weight: 700; color: white; transition: flex 0.6s; }
+
+    /* Prob bars */
+    .prob-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 0.85rem; }
+    .prob-label { width: 180px; flex-shrink: 0; font-weight: 500; }
+    .prob-bar-wrap { flex: 1; background: #f0fdf4; border-radius: 6px; height: 18px; overflow: hidden; }
+    .prob-bar-fill { height: 100%; border-radius: 6px; transition: width 0.8s; background: var(--green); }
+    .prob-val { width: 48px; text-align: right; font-weight: 700; color: var(--green-d); }
+
+    /* Similar users */
+    .user-card { background: #f8fafc; border: 1.5px solid #e2e8f0;
+                 border-radius: 10px; padding: 12px; font-size: 0.83rem; }
+    .user-card strong { display: block; margin-bottom: 6px; color: var(--green-d); }
+    .sim-score { display: inline-block; background: var(--green-l); color: var(--green-d);
+                 border-radius: 10px; padding: 2px 10px; font-weight: 700; font-size: 0.8rem; }
+
+    /* Error */
+    .error-box { background: #fee2e2; border: 2px solid #fca5a5; border-radius: 12px;
+                 padding: 20px; color: #7f1d1d; margin-top: 20px; }
+
+    .divider { border: none; border-top: 2px dashed #d1fae5; margin: 24px 0; }
+    .text-center { text-align: center; }
+    .mt-12 { margin-top: 12px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🥗 NutriAI</h1>
+  <p>Personalised Nutrition Recommendation System for Weight Management</p>
+  <div class="badge">🤖 Powered by Gradient Boosting + KNN Hybrid Model · UCI Obesity Dataset</div>
+</header>
+
+<div class="container">
+
+  <!-- FORM -->
+  <form id="nutriForm">
+
+    <!-- Basic Info -->
+    <div class="section-header">👤 Personal Information</div>
+    <div class="grid-3">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="name" placeholder="e.g. Rahul Sharma" required/>
+      </div>
+      <div class="form-group">
+        <label>Gender</label>
+        <select id="gender">
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Age</label>
+        <input type="number" id="age" placeholder="e.g. 30" min="10" max="100" required/>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Height (cm)</label>
+        <input type="number" id="height_cm" placeholder="e.g. 170" min="100" max="250" required/>
+      </div>
+      <div class="form-group">
+        <label>Weight (kg)</label>
+        <input type="number" id="weight_kg" placeholder="e.g. 85" min="20" max="300" required/>
+      </div>
+    </div>
+
+    <!-- Eating Habits -->
+    <div class="section-header">🍽️ Eating Habits</div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Family History of Obesity</label>
+        <select id="family_history_obesity">
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Frequently eat High-Caloric Food?</label>
+        <select id="high_caloric_food">
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Vegetable Consumption Frequency</label>
+        <div class="range-row">
+          <input type="range" id="vegetable_frequency" min="1" max="3" step="0.5" value="2"
+                 oninput="document.getElementById('veg_val').textContent=this.value"/>
+          <span class="range-val" id="veg_val">2</span>
+        </div>
+        <div class="hint">1 = Rarely · 2 = Sometimes · 3 = Always</div>
+      </div>
+      <div class="form-group">
+        <label>Main Meals per Day</label>
+        <input type="number" id="main_meals_per_day" value="3" min="1" max="5"/>
+      </div>
+      <div class="form-group">
+        <label>Snacking Between Meals</label>
+        <select id="snacking">
+          <option value="no">No</option>
+          <option value="Sometimes">Sometimes</option>
+          <option value="Frequently">Frequently</option>
+          <option value="Always">Always</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Calorie Monitoring</label>
+        <select id="calorie_monitoring">
+          <option value="no">No</option>
+          <option value="yes">Yes</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Lifestyle -->
+    <div class="section-header">🏃 Lifestyle & Habits</div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Daily Water Intake (litres)</label>
+        <div class="range-row">
+          <input type="range" id="water_intake_litres" min="0.5" max="5" step="0.5" value="2"
+                 oninput="document.getElementById('water_val').textContent=this.value"/>
+          <span class="range-val" id="water_val">2</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Physical Activity (days/week)</label>
+        <div class="range-row">
+          <input type="range" id="physical_activity_days" min="0" max="7" step="1" value="1"
+                 oninput="document.getElementById('act_val').textContent=this.value"/>
+          <span class="range-val" id="act_val">1</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Screen/Device Usage (hours/day)</label>
+        <div class="range-row">
+          <input type="range" id="tech_device_hours" min="0" max="16" step="0.5" value="4"
+                 oninput="document.getElementById('tech_val').textContent=this.value"/>
+          <span class="range-val" id="tech_val">4</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Alcohol Consumption</label>
+        <select id="alcohol_frequency">
+          <option value="no">Never</option>
+          <option value="Sometimes">Sometimes</option>
+          <option value="Frequently">Frequently</option>
+          <option value="Always">Always</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Smoker?</label>
+        <select id="smoker">
+          <option value="no">No</option>
+          <option value="yes">Yes</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Primary Transport Mode</label>
+        <select id="transport_mode">
+          <option value="Automobile">Automobile / Car</option>
+          <option value="Public_Transportation">Public Transport</option>
+          <option value="Walking">Walking</option>
+          <option value="Bike">Bike / Cycling</option>
+          <option value="Motorbike">Motorbike</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Personalisation -->
+    <div class="section-header">🎯 Personalisation</div>
+    <div class="grid-3">
+      <div class="form-group">
+        <label>Diet Preference</label>
+        <select id="diet_preference">
+          <option value="none">No Preference</option>
+          <option value="vegetarian">Vegetarian</option>
+          <option value="vegan">Vegan</option>
+          <option value="keto">Keto / Low-Carb</option>
+          <option value="diabetic">Diabetic-Friendly</option>
+          <option value="gluten_free">Gluten-Free</option>
+          <option value="halal">Halal</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Health Goal</label>
+        <select id="health_goal">
+          <option value="lose_weight">Lose Weight</option>
+          <option value="maintain">Maintain Weight</option>
+          <option value="gain_muscle">Gain Muscle</option>
+          <option value="manage_diabetes">Manage Diabetes</option>
+          <option value="heart_health">Heart Health</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Activity Level</label>
+        <select id="activity_level">
+          <option value="sedentary">Sedentary (desk job)</option>
+          <option value="light">Light (1–2 days/week)</option>
+          <option value="moderate">Moderate (3–4 days/week)</option>
+          <option value="active">Active (5 days/week)</option>
+          <option value="very_active">Very Active (6–7 days/week)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Food Allergies (select all that apply)</label>
+      <div class="check-grid">
+        <label class="check-item"><input type="checkbox" name="allergy" value="nuts"/> 🥜 Nuts</label>
+        <label class="check-item"><input type="checkbox" name="allergy" value="dairy"/> 🥛 Dairy</label>
+        <label class="check-item"><input type="checkbox" name="allergy" value="gluten"/> 🌾 Gluten</label>
+        <label class="check-item"><input type="checkbox" name="allergy" value="eggs"/> 🥚 Eggs</label>
+        <label class="check-item"><input type="checkbox" name="allergy" value="soy"/> 🫘 Soy</label>
+        <label class="check-item"><input type="checkbox" name="allergy" value="fish"/> 🐟 Fish</label>
+        <label class="check-item"><input type="checkbox" name="allergy" value="shellfish"/> 🦐 Shellfish</label>
+      </div>
+    </div>
+
+    <button type="submit" class="btn" id="submitBtn">🥗 Get My Nutrition Plan</button>
+  </form>
+
+  <!-- LOADER -->
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <p style="color:var(--green-d);font-weight:600;">Analysing your profile & generating recommendations...</p>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <hr class="divider"/>
+    <div style="font-size:1.5rem;font-weight:800;color:var(--green-d);margin-bottom:20px;text-align:center;">
+      🎉 Your Personalised Nutrition Report
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-grid" id="statGrid"></div>
+
+    <!-- BMI Meter -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">📊 BMI Classification</div>
+      <div style="font-size:0.85rem;color:var(--muted);margin-bottom:8px;">
+        Your BMI position on the WHO scale:
+      </div>
+      <div class="bmi-meter">
+        <div class="bmi-needle" id="bmiNeedle"></div>
+      </div>
+      <div class="bmi-labels">
+        <span>Underweight<br/>&lt;18.5</span>
+        <span style="text-align:center;">Normal<br/>18.5–25</span>
+        <span style="text-align:center;">Overweight<br/>25–30</span>
+        <span style="text-align:center;">Obese I<br/>30–35</span>
+        <span style="text-align:center;">Obese II<br/>35–40</span>
+        <span style="text-align:right;">Obese III<br/>40+</span>
+      </div>
+      <div id="bmiCategoryBadge" style="margin-top:12px;text-align:center;"></div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:20px;">
+      <!-- Nutrition Plan -->
+      <div class="card">
+        <div class="card-title">🔥 Calorie & Macro Plan</div>
+        <div id="caloriePlan"></div>
+        <div class="card-title" style="margin-top:20px;">📅 Daily Meal Plan</div>
+        <div id="mealPlan"></div>
+      </div>
+
+      <!-- Alerts + Adjustments -->
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title">⚠️ Personalised Alerts</div>
+          <div id="alertsBox"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">✅ Diet Adjustments</div>
+          <div id="adjustmentsBox"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:20px;">
+      <!-- Foods -->
+      <div class="card">
+        <div class="card-title">🥦 Foods to INCREASE</div>
+        <div class="tag-list" id="foodsIncrease"></div>
+        <div class="card-title" style="margin-top:20px;">🚫 Foods to AVOID</div>
+        <div class="tag-list" id="foodsAvoid"></div>
+      </div>
+
+      <!-- Supplements + Exercise -->
+      <div class="card">
+        <div class="card-title">💊 Supplements</div>
+        <div class="tag-list" id="supplements"></div>
+        <div class="card-title" style="margin-top:20px;">🏋️ Exercise Plan</div>
+        <div style="background:#f0fdf4;border-radius:10px;padding:14px;font-size:0.92rem;border:1px solid #d1fae5;" id="exercisePlan"></div>
+        <div class="card-title" style="margin-top:20px;">💧 Hydration Target</div>
+        <div style="background:#e0f2fe;border-radius:10px;padding:14px;font-size:0.95rem;font-weight:600;color:#0c4a6e;border:1px solid #bae6fd;" id="hydrationGoal"></div>
+      </div>
+    </div>
+
+    <!-- Similar users + Probability -->
+    <div class="grid-2" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-title">👥 Similar Users (Collaborative Filtering)</div>
+        <div id="similarUsers"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📈 Obesity Level Probabilities</div>
+        <div id="probBars"></div>
+      </div>
+    </div>
+
+    <div class="text-center mt-12">
+      <button class="btn" style="width:auto;padding:12px 40px;" onclick="resetForm()">↩️ New Assessment</button>
+    </div>
+  </div>
+
+  <div id="errorBox"></div>
+
+</div><!-- /container -->
+
+<script>
+const API = '';   // empty = same origin
+
+const mealIcons = ['☀️','🌤️','🍎','🌙'];
+
+function v(id){ return document.getElementById(id).value; }
+
+document.getElementById('nutriForm').addEventListener('submit', async(e) => {
+  e.preventDefault();
+  const allergies = [...document.querySelectorAll('input[name=allergy]:checked')].map(c=>c.value);
+  const payload = {
+    name                   : v('name'),
+    gender                 : v('gender'),
+    age                    : +v('age'),
+    height_cm              : +v('height_cm'),
+    weight_kg              : +v('weight_kg'),
+    family_history_obesity : v('family_history_obesity'),
+    high_caloric_food      : v('high_caloric_food'),
+    vegetable_frequency    : +v('vegetable_frequency'),
+    main_meals_per_day     : +v('main_meals_per_day'),
+    snacking               : v('snacking'),
+    smoker                 : v('smoker'),
+    water_intake_litres    : +v('water_intake_litres'),
+    calorie_monitoring     : v('calorie_monitoring'),
+    physical_activity_days : +v('physical_activity_days'),
+    tech_device_hours      : +v('tech_device_hours'),
+    alcohol_frequency      : v('alcohol_frequency'),
+    transport_mode         : v('transport_mode'),
+    diet_preference        : v('diet_preference'),
+    allergies              : allergies.length ? allergies : ['none'],
+    health_goal            : v('health_goal'),
+    activity_level         : v('activity_level'),
+  };
+
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('loader').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('errorBox').innerHTML = '';
+
+  try {
+    const res  = await fetch(`${API}/recommend`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Server error');
+    }
+    const data = await res.json();
+    renderResults(data);
+  } catch(err) {
+    document.getElementById('errorBox').innerHTML =
+      `<div class="error-box">❌ <strong>Error:</strong> ${err.message}</div>`;
+  } finally {
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('submitBtn').disabled = false;
+  }
+});
+
+function renderResults(d) {
+  // Stats
+  document.getElementById('statGrid').innerHTML = `
+    <div class="stat-box"><div class="stat-num">${d.bmi}</div><div class="stat-label">BMI</div></div>
+    <div class="stat-box"><div class="stat-num">${d.current_weight_kg} kg</div><div class="stat-label">Current Weight</div></div>
+    <div class="stat-box" style="background:#fee2e2;border-color:#fca5a5;">
+      <div class="stat-num" style="color:#991b1b;">${d.weight_to_lose_kg ?? '—'} kg</div>
+      <div class="stat-label">To Lose</div>
+    </div>
+  `;
+
+  // BMI needle (range 10–50)
+  const pct = Math.min(Math.max((d.bmi - 10) / 40 * 100, 2), 98);
+  document.getElementById('bmiNeedle').style.left = pct + '%';
+  document.getElementById('bmiCategoryBadge').innerHTML =
+    `<span style="background:#dcfce7;color:#14532d;font-weight:700;font-size:1rem;
+      padding:6px 20px;border-radius:20px;border:2px solid #86efac;">
+      📌 ${d.bmi_category.replace(/_/g,' ')} &nbsp;|&nbsp; BMI ${d.bmi} &nbsp;|&nbsp; Healthy: ${d.healthy_weight_min_kg}–${d.healthy_weight_max_kg} kg
+    </span>`;
+
+  // Macro bar
+  const macroStr = d.macros;
+  const parts = macroStr.split('|').map(s=>s.trim());
+  const macroSegs = parts.map((p,i)=>{
+    const [label, pctStr] = p.split(' ');
+    const val = parseInt(pctStr);
+    const colors = ['#3b82f6','#22c55e','#f97316'];
+    return `<div class="macro-seg" style="flex:${val};background:${colors[i]};">${label} ${pctStr}</div>`;
+  }).join('');
+
+  document.getElementById('caloriePlan').innerHTML = `
+    <div style="font-size:1.5rem;font-weight:800;color:var(--green-d);text-align:center;margin-bottom:8px;">
+      🔥 ${d.calorie_target}
+    </div>
+    <div style="font-size:0.8rem;color:var(--muted);text-align:center;margin-bottom:10px;">Macronutrient Split</div>
+    <div class="macro-bar">${macroSegs}</div>
+    <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--muted);margin-top:4px;">
+      ${parts.map(p=>`<span>${p}</span>`).join('')}
+    </div>
+    <div class="alert-ok mt-12" style="margin-top:14px;">🎯 ${d.priority}</div>
+  `;
+
+  // Meals
+  document.getElementById('mealPlan').innerHTML = d.meal_plan.map((meal,i)=>
+    `<div class="meal-item"><span class="meal-icon">${mealIcons[i]||'🍽️'}</span><span class="meal-text">${meal}</span></div>`
+  ).join('');
+
+  // Alerts
+  const alertsHtml = d.personal_alerts.length
+    ? d.personal_alerts.map(a=>
+        `<div class="alert-box ${a.includes('🚨')?'alert-urgent':'alert-warn'}">${a}</div>`
+      ).join('')
+    : '<div class="alert-box alert-ok">✅ No major habit concerns detected!</div>';
+  document.getElementById('alertsBox').innerHTML = alertsHtml;
+
+  // Adjustments
+  const adjHtml = d.diet_adjustments.length
+    ? d.diet_adjustments.map(a=>`<div class="alert-box alert-info">${a}</div>`).join('')
+    : '<div class="alert-box alert-ok">✅ Standard plan applied</div>';
+  document.getElementById('adjustmentsBox').innerHTML = adjHtml;
+
+  // Foods
+  document.getElementById('foodsIncrease').innerHTML =
+    d.foods_to_increase.map(f=>`<span class="tag tag-green">✅ ${f}</span>`).join('');
+  document.getElementById('foodsAvoid').innerHTML =
+    d.foods_to_avoid.map(f=>`<span class="tag tag-red">❌ ${f}</span>`).join('');
+
+  // Supplements
+  document.getElementById('supplements').innerHTML =
+    d.supplements.map(s=>`<span class="tag tag-purple">💊 ${s}</span>`).join('');
+
+  // Exercise & Hydration
+  document.getElementById('exercisePlan').textContent = '🏋️ ' + d.exercise;
+  document.getElementById('hydrationGoal').textContent = '💧 ' + d.hydration;
+
+  // Similar users
+  document.getElementById('similarUsers').innerHTML = d.similar_users.slice(0,5).map((u,i)=>`
+    <div class="user-card" style="margin-bottom:8px;">
+      <strong>👤 Similar User ${i+1}
+        <span class="sim-score">${(u.similarity*100).toFixed(1)}% match</span>
+      </strong>
+      <span class="tag tag-orange" style="margin-right:4px;">BMI ${u.bmi}</span>
+      <span class="tag tag-blue" style="margin-right:4px;">Age ${u.age}</span>
+      <span class="tag tag-green" style="margin-right:4px;">Activity ${u.activity}</span>
+      <span class="tag tag-purple">${u.obesity_level.replace(/_/g,' ')}</span>
+    </div>
+  `).join('');
+
+  // Probability bars
+  const sorted = Object.entries(d.obesity_probabilities).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('probBars').innerHTML = sorted.map(([label, prob])=>{
+    const pct = (prob*100).toFixed(1);
+    const isUser = label === d.bmi_category;
+    const barColor = isUser ? '#22c55e' : '#94a3b8';
+    return `
+      <div class="prob-row">
+        <div class="prob-label" style="font-weight:${isUser?700:400};color:${isUser?'#14532d':'inherit'};">
+          ${isUser?'▶ ':''} ${label.replace(/_/g,' ')}
+        </div>
+        <div class="prob-bar-wrap">
+          <div class="prob-bar-fill" style="width:${pct}%;background:${barColor};"></div>
+        </div>
+        <div class="prob-val">${pct}%</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth'});
+}
+
+function resetForm() {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('nutriForm').scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>

@@ -7,9 +7,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Expose ports for FastAPI (8000) and Streamlit (8501)
-EXPOSE 8000
-EXPOSE 8501
+# Train the model during build so the artifact is baked in
+RUN python train_and_save_model.py
 
-# Run FastAPI in the background and then Streamlit
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000 & sleep 5 && streamlit run app/dashboard.py --server.port 8501 --server.address 0.0.0.0"]
+# Expose port for FastAPI
+EXPOSE 8000
+
+# Run FastAPI
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
